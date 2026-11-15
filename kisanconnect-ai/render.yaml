@@ -1,0 +1,18 @@
+# Render Blueprint: deploys KisanConnect AI as a web service.
+# You can also create the service by hand (see README, "Deploy on Render").
+services:
+  - type: web
+    name: kisanconnect-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # One worker + --preload: the app starts once per deploy.
+    startCommand: gunicorn app:app --preload --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /login
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false          # Render asks you to type it when you create the service

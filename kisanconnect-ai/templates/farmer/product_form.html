@@ -47,7 +47,7 @@
       <label class="drop" for="image">
         <input type="file" id="image" name="image" accept="image/*" data-preview="#prod-preview" data-grade-input>
         <span>{{ 'Replace the photo' if p and p.image else 'Tap to add a clear daylight photo' }}</span>
-        <img id="prod-preview" alt="Photo preview" {% if p and p.image %}src="{{ url_for('static', filename='uploads/' ~ p.image) }}"{% else %}hidden{% endif %}>
+        <img id="prod-preview" alt="Photo preview" {% if p and p.image %}src="{{ url_for('media', filename=p.image) }}"{% else %}hidden{% endif %}>
       </label>
       <div class="ai-box" data-grade-box aria-live="polite">
         <p class="muted">The AI grades your photo as soon as you choose it. A saved photo sets the grade automatically.</p>

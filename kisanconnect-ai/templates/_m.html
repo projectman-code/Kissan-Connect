@@ -12,7 +12,7 @@
 
 {% macro media(p, big=false) %}
   <div class="media cat-{{ p.category }}{{ ' media-big' if big }}">
-    {% if p.image %}<img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name }}" loading="lazy">
+    {% if p.image %}<img src="{{ url_for('media', filename=p.image) }}" alt="{{ p.name }}" loading="lazy">
     {% else %}<span class="media-emoji" aria-hidden="true">{{ p.emoji or '🌱' }}</span>{% endif %}
   </div>
 {% endmacro %}

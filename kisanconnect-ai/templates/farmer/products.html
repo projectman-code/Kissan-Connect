@@ -14,7 +14,7 @@
   <tbody>
   {% for p in items %}
     <tr>
-      <td><a href="{{ url_for('product', pid=p.id) }}" class="cell-product"><span class="mini-media cat-{{ p.category }}">{% if p.image %}<img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="">{% else %}{{ p.emoji }}{% endif %}</span><span><strong>{{ p.name }}</strong><small class="muted">{{ p.category }}{% if p.organic %}, organic{% endif %}</small></span></a></td>
+      <td><a href="{{ url_for('product', pid=p.id) }}" class="cell-product"><span class="mini-media cat-{{ p.category }}">{% if p.image %}<img src="{{ url_for('media', filename=p.image) }}" alt="">{% else %}{{ p.emoji }}{% endif %}</span><span><strong>{{ p.name }}</strong><small class="muted">{{ p.category }}{% if p.organic %}, organic{% endif %}</small></span></a></td>
       <td>{{ p.price|inr }} <small class="muted">/ {{ p.unit }}</small></td>
       <td>{{ p.quantity }} {{ p.unit }}</td>
       <td>{{ grade(p.grade) }}{% if p.ai_verified %}<small class="muted"> AI {{ p.quality_score }}</small>{% endif %}</td>

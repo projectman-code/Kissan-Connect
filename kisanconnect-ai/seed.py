@@ -9,7 +9,9 @@ Demo logins (change these before any real use):
     priya     / buyer123
     spicehub  / buyer123
 """
+import os
 import random
+import secrets
 from datetime import datetime, timedelta
 
 from werkzeug.security import generate_password_hash
@@ -22,10 +24,10 @@ def _ts(days_ago, hour=10):
     return d.replace(hour=hour, minute=random.randint(0, 59), second=0).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def seed(db):
+def seed_demo(db):
     random.seed(11)
     users = [
-        ("admin", "admin123", "Platform Admin", "admin", "9876500000", "Hyderabad, Telangana", "active"),
+        ("admin", os.environ.get("ADMIN_PASSWORD") or "admin123", "Platform Admin", "admin", "9876500000", "Hyderabad, Telangana", "active"),
         ("ramesh", "farmer123", "Ramesh Patil", "farmer", "9876500001", "Nashik, Maharashtra", "active"),
         ("lakshmi", "farmer123", "Lakshmi Devi", "farmer", "9876500002", "Guntur, Andhra Pradesh", "active"),
         ("gurpreet", "farmer123", "Gurpreet Singh", "farmer", "9876500003", "Ludhiana, Punjab", "active"),
@@ -126,3 +128,32 @@ def seed(db):
         db.execute("INSERT INTO messages(sender_id,receiver_id,body,is_read,created_at) VALUES(?,?,?,?,?)",
                    (ids[s], ids[r], body, 0 if r == "priya" else 1, _ts(ago)))
     db.commit()
+
+
+def seed_admin(db):
+    """Fresh, empty marketplace: only the first admin account is created.
+
+    Set ADMIN_USERNAME and ADMIN_PASSWORD (environment variables) to choose them.
+    Without ADMIN_PASSWORD a random one is created and printed once in the server log.
+    """
+    username = (os.environ.get("ADMIN_USERNAME") or "admin").strip().lower()
+    password = os.environ.get("ADMIN_PASSWORD")
+    generated = not password
+    if generated:
+        password = secrets.token_urlsafe(9)
+    db.execute(
+        """INSERT INTO users(username,password_hash,name,role,language,status,created_at)
+           VALUES(?,?,?,?,?,?,?)""",
+        (username, generate_password_hash(password), os.environ.get("ADMIN_NAME") or "Administrator",
+         "admin", "en", "active", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    db.commit()
+    if generated:
+        print(f"[KisanConnect] First admin created. Username: {username}  Password: {password}", flush=True)
+
+
+def seed(db):
+    """Real launch by default. Set SEED_DEMO=1 to load demo farmers, buyers and produce."""
+    if os.environ.get("SEED_DEMO") == "1":
+        seed_demo(db)
+    else:
+        seed_admin(db)

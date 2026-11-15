@@ -13,9 +13,9 @@
         <a class="btn btn-outline-light btn-lg" href="{{ url_for('register', role='farmer') }}">{{ t('cta_sell') }}</a>
       </div>
       <dl class="hero-facts">
-        <div><dt>{{ stats.farmers }}</dt><dd>verified farmers</dd></div>
-        <div><dt>{{ stats.products }}</dt><dd>listings today</dd></div>
         <div><dt>0</dt><dd>middlemen</dd></div>
+        <div><dt>COD</dt><dd>pay when it arrives</dd></div>
+        <div><dt>4</dt><dd>languages</dd></div>
       </dl>
     </div>
 
@@ -44,7 +44,7 @@
       <a class="text-link" href="{{ url_for('shop') }}">{{ t('view_all') }}</a>
     </div>
     <div class="grid grid-4">
-      {% for p in featured %}{{ card(p) }}{% else %}<p class="empty">No produce is listed yet. Farmers can list the first batch.</p>{% endfor %}
+      {% for p in featured %}{{ card(p) }}{% else %}<div class="empty-state" style="grid-column: 1 / -1"><h3>Fresh produce will appear here</h3><p>Farmers are joining the market. Register as a farmer to list the first harvest.</p><a class="btn btn-primary" href="{{ url_for('register', role='farmer') }}">{{ t('cta_sell') }}</a></div>{% endfor %}
     </div>
   </div>
 </section>

@@ -21,6 +21,7 @@
       <p class="muted center">New here? <a class="text-link" href="{{ url_for('register') }}">{{ t('register_btn') }}</a></p>
     </div>
 
+    {% if show_demo %}
     <aside class="demo-box" aria-label="Demo accounts">
       <h2>Demo accounts</h2>
       <p class="muted">Tap one to fill the form. Remove this box and change these passwords before real use.</p>
@@ -38,6 +39,7 @@
         {% endfor %}
       </ul>
     </aside>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

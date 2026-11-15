@@ -18,10 +18,14 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open **http://127.0.0.1:5000**. Demo data is created automatically on the first run.
-Python 3.9 or newer is required.
+Open **http://127.0.0.1:5000**. The first run creates an **empty marketplace with one admin account**.
+Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` before starting to choose the login. If you do not, a random
+admin password is printed once in the terminal. Python 3.9 or newer is required.
 
-## Demo logins
+To try the app with sample farmers, buyers and produce instead, start it with `SEED_DEMO=1` and
+`SHOW_DEMO=1` (see the next section).
+
+## Demo logins (only when started with `SEED_DEMO=1`)
 
 | Role   | Username   | Password    | Notes                                  |
 |--------|------------|-------------|----------------------------------------|
@@ -33,8 +37,7 @@ Python 3.9 or newer is required.
 | Buyer  | `priya`    | `buyer123`  | Has orders and a chat                  |
 | Buyer  | `spicehub` | `buyer123`  | Restaurant with bulk orders            |
 
-The login page has buttons that fill these in. **Before real use**, change the passwords
-and delete the "Demo accounts" box in `templates/login.html`.
+With `SHOW_DEMO=1` the login page also shows buttons that fill these in. Never use demo mode on a real site.
 
 ## One login for everyone
 
@@ -94,10 +97,10 @@ ai/                 price, quality, disease, forecast, chatbot, crop catalog
 templates/          pages (admin/, farmer/ sub-folders)
 static/css, js      styling and behaviour
 instance/kisan.db   SQLite database (created on first run)
-static/uploads/     produce photos
+instance/uploads/    produce photos
 ```
 
-## Reset the demo data
+## Start over
 Stop the app, delete `instance/kisan.db`, start it again.
 
 ## Before going live
@@ -105,3 +108,38 @@ Stop the app, delete `instance/kisan.db`, start it again.
 - Change or remove demo accounts
 - Run behind a production server (for example `gunicorn app:app`) with HTTPS
 - Replace the AI training data with real data
+
+## Deploy on Render
+
+Render deploys from a Git repository, so the project goes to GitHub first. If the project sits in a
+sub-folder of the repo, set **Root Directory** to that folder.
+
+| Field | Value |
+|---|---|
+| Language | Python 3 |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `gunicorn app:app --preload --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT` |
+| Health Check Path (Advanced) | `/login` |
+
+**Environment variables**
+
+| Key | Value | Why |
+|---|---|---|
+| `SECRET_KEY` | long random text | keeps login sessions safe |
+| `ADMIN_USERNAME` | your admin login name | created on first start |
+| `ADMIN_PASSWORD` | a strong password | created on first start |
+| `PYTHON_VERSION` | `3.13.5` | pins the Python version |
+| `DATA_DIR` | `/var/data` | only with a persistent disk (below) |
+| `RESET_DB` | `1` | optional: wipe the database and photos on every start |
+| `ANTHROPIC_API_KEY` | your key | optional: LLM chatbot |
+
+The site starts empty. Log in with the admin account, approve farmers, and let real farmers and buyers register.
+
+### Keeping your data
+SQLite stores everything in one file. On Render's **free** plan local files are erased whenever the
+service redeploys, restarts or sleeps, so accounts, orders and photos do not last. For a real site:
+1. Use a paid instance type and add a **Disk** (Render dashboard, your service, Disks) with mount path `/var/data`.
+2. Add the environment variable `DATA_DIR` = `/var/data`.
+3. Make sure `RESET_DB` is **not** set.
+
+The database and photos are then kept between deploys. (A hosted Postgres database is the other option, but needs code changes.)

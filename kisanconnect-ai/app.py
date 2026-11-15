@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (Flask, abort, flash, g, jsonify, redirect, render_template,
-                   request, session, url_for)
+                   request, send_from_directory, session, url_for)
 from PIL import Image
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -22,9 +22,11 @@ from ai.catalog import CATEGORIES, CROPS, GRADES, UNITS, emoji_for
 from i18n import LANG_NAMES, TRANSLATIONS
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-INSTANCE_DIR = os.path.join(APP_DIR, "instance")
+# DATA_DIR: where the database and uploaded photos live. Point it at a Render
+# persistent disk (for example /var/data) to keep data between deploys.
+INSTANCE_DIR = os.environ.get("DATA_DIR") or os.path.join(APP_DIR, "instance")
 DB_PATH = os.path.join(INSTANCE_DIR, "kisan.db")
-UPLOAD_DIR = os.path.join(APP_DIR, "static", "uploads")
+UPLOAD_DIR = os.path.join(INSTANCE_DIR, "uploads")
 os.makedirs(INSTANCE_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -183,7 +185,8 @@ def inject():
         unread = q("SELECT COUNT(*) c FROM messages WHERE receiver_id=? AND is_read=0", (g.user["id"],), one=True)["c"]
     return dict(t=t, lang=lang, lang_names=LANG_NAMES, csrf_token=csrf_token, me=g.user,
                 cart_count=sum(cart.values()), unread_count=unread, categories=CATEGORIES,
-                order_flow=ORDER_FLOW, year=datetime.now().year)
+                order_flow=ORDER_FLOW, year=datetime.now().year,
+                show_demo=os.environ.get("SHOW_DEMO", "0") == "1")
 
 
 @app.template_filter("inr")
@@ -218,6 +221,11 @@ def _too_many(key):
     hits = [t for t in _fails.get(key, []) if time.time() - t < 300]
     _fails[key] = hits
     return len(hits) >= 6
+
+
+@app.route("/media/<path:filename>")
+def media(filename):
+    return send_from_directory(UPLOAD_DIR, filename, max_age=3600)
 
 
 @app.route("/lang/<code>")
@@ -1020,6 +1028,17 @@ def too_big(_):
 
 # --------------------------------------------------------------------- seed
 def init_db():
+    # RESET_DB=1 wipes the database and uploaded photos on every start,
+    # so each redeploy begins with fresh demo data.
+    if os.environ.get("RESET_DB") == "1":
+        if os.path.exists(DB_PATH):
+            os.remove(DB_PATH)
+        for name in os.listdir(UPLOAD_DIR):
+            if name != ".gitkeep":
+                try:
+                    os.remove(os.path.join(UPLOAD_DIR, name))
+                except OSError:
+                    pass
     db = sqlite3.connect(DB_PATH)
     db.executescript(SCHEMA)
     db.commit()
