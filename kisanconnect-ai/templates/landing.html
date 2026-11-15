@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_m.html" import card with context %}
+{% block title %}Fresh from the farm{% endblock %}
+{% block bodyclass %}is-landing{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <h1>{{ t('hero_title') }}</h1>
+      <p class="lead">{{ t('hero_sub') }}</p>
+      <div class="hero-cta">
+        <a class="btn btn-gold btn-lg" href="{{ url_for('shop') }}">{{ t('cta_shop') }}</a>
+        <a class="btn btn-outline-light btn-lg" href="{{ url_for('register', role='farmer') }}">{{ t('cta_sell') }}</a>
+      </div>
+      <dl class="hero-facts">
+        <div><dt>{{ stats.farmers }}</dt><dd>verified farmers</dd></div>
+        <div><dt>{{ stats.products }}</dt><dd>listings today</dd></div>
+        <div><dt>0</dt><dd>middlemen</dd></div>
+      </dl>
+    </div>
+
+    <aside class="board" aria-label="Today's AI fair rates">
+      <header>
+        <h2>Today's fair rates</h2>
+        <p>Suggested by our price model for grade B produce this month.</p>
+      </header>
+      <ul>
+        {% for b in board %}
+        <li style="--tilt: {{ loop.cycle('-1.2deg', '0.8deg', '-0.5deg', '1.1deg', '-0.9deg') }}">
+          <span class="board-crop"><span aria-hidden="true">{{ b.emoji }}</span> {{ b.crop }}</span>
+          <span class="board-range">{{ b.low|inr }} to {{ b.high|inr }}</span>
+          <span class="tag"><b>{{ b.suggested|inr }}</b><small>/ {{ b.unit }}</small></span>
+        </li>
+        {% endfor %}
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>{{ t('fresh_today') }}</h2>
+      <a class="text-link" href="{{ url_for('shop') }}">{{ t('view_all') }}</a>
+    </div>
+    <div class="grid grid-4">
+      {% for p in featured %}{{ card(p) }}{% else %}<p class="empty">No produce is listed yet. Farmers can list the first batch.</p>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="wrap split">
+    <div>
+      <h2 class="big">AI that works for both sides of the sale.</h2>
+      <p class="lead-dark">Every tool below is built into the marketplace. Nothing to install, nothing to pay extra for.</p>
+      <a class="btn btn-primary" href="{{ url_for('register') }}">{{ t('register_btn') }}</a>
+    </div>
+    <ul class="feature-list">
+      <li><h3>Fair price suggestion</h3><p>Farmers see a price range for their crop, quality and season before they list. Buyers see whether a price is fair.</p></li>
+      <li><h3>Photo quality grading</h3><p>Upload a photo and the AI scores colour, sharpness and blemishes into Grade A, B or C that buyers can trust.</p></li>
+      <li><h3>Crop doctor</h3><p>Snap one leaf. Get the likely problem and what to do, in English, Hindi or Telugu.</p></li>
+      <li><h3>Demand forecast</h3><p>See which crops will sell best over the next three months so you plan what to sow and when to sell.</p></li>
+      <li><h3>Farming assistant</h3><p>Ask about pests, fertiliser, schemes or your order. It answers in your language, even without internet keys.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap cod">
+    <div>
+      <h2>Pay cash when it arrives.</h2>
+      <p>Cash on delivery is the only payment method. No cards, no wallets, no advance. The order shows Payment collected once it is delivered.</p>
+    </div>
+    <ol class="cod-steps">
+      <li>Place the order</li><li>Farmer confirms and packs</li><li>It reaches your door</li><li>You pay the farmer in cash</li>
+    </ol>
+  </div>
+</section>
+{% endblock %}

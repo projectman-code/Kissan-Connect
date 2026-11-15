@@ -1,0 +1,45 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import pill with context %}
+{% set section = 'a-users' %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<header class="dash-head"><h1>Users</h1><a class="btn btn-gold" href="{{ url_for('admin_user_new') }}">Create account</a></header>
+
+<form class="filters-inline" method="get">
+  <select class="input" name="role" aria-label="Role" data-autosubmit>
+    <option value="">All roles</option>{% for r in ['admin', 'farmer', 'buyer'] %}<option value="{{ r }}" {{ 'selected' if role == r }}>{{ r|title }}</option>{% endfor %}
+  </select>
+  <select class="input" name="status" aria-label="Status" data-autosubmit>
+    <option value="">Any status</option>{% for s in ['active', 'pending', 'blocked'] %}<option value="{{ s }}" {{ 'selected' if status == s }}>{{ s|title }}</option>{% endfor %}
+  </select>
+  <noscript><button class="btn btn-sm btn-primary">Filter</button></noscript>
+</form>
+
+<div class="table-wrap"><table class="table table-rows">
+  <thead><tr><th>User</th><th>Role</th><th>Status</th><th>COD</th><th>Joined</th><th><span class="sr">Actions</span></th></tr></thead>
+  <tbody>
+  {% for u in rows %}
+    <tr>
+      <td><strong>{{ u.name }}</strong><small class="muted">@{{ u.username }}, {{ u.phone or 'no phone' }}</small></td>
+      <td><span class="role-tag role-{{ u.role }}">{{ u.role }}</span></td>
+      <td>{{ pill(u.status) }}</td>
+      <td>{% if u.role == 'admin' %}<span class="muted">n/a</span>{% elif u.cod_blocked %}<span class="pill pill-blocked">Off</span>{% else %}<span class="pill pill-active">On</span>{% endif %}</td>
+      <td>{{ u.created_at|day }}</td>
+      <td class="actions">
+        {% if u.status == 'pending' %}{% set acts = [('approve', 'Approve', 'btn-primary')] %}
+        {% elif u.status == 'blocked' %}{% set acts = [('unblock', 'Unblock', 'btn-outline')] %}
+        {% else %}{% set acts = [('block', 'Block', 'btn-danger-outline')] %}{% endif %}
+        {% if u.role != 'admin' %}{% set acts = acts + [('cod_unblock', 'Allow COD', 'btn-outline') if u.cod_blocked else ('cod_block', 'Stop COD', 'btn-outline')] %}{% endif %}
+        {% for a, label, cls in acts %}
+        {% if not (u.id == me.id and a == 'block') %}
+        <form method="post" action="{{ url_for('admin_user_action', uid=u.id, action=a) }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn {{ cls }} btn-sm">{{ label }}</button></form>
+        {% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">No users match these filters.</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

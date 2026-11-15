@@ -1,0 +1,29 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import grade, pill with context %}
+{% set section = 'a-products' %}
+{% block title %}All produce{% endblock %}
+{% block content %}
+<header class="dash-head"><h1>All produce</h1><a class="btn btn-gold" href="{{ url_for('product_new') }}">Add produce</a></header>
+<div class="table-wrap"><table class="table table-rows">
+  <thead><tr><th>Produce</th><th>Farmer</th><th>Price</th><th>Stock</th><th>Grade</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+  <tbody>
+  {% for p in rows %}
+    <tr>
+      <td><a href="{{ url_for('product', pid=p.id) }}" class="cell-product"><span class="mini-media cat-{{ p.category }}">{% if p.image %}<img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="">{% else %}{{ p.emoji }}{% endif %}</span><span><strong>{{ p.name }}</strong><small class="muted">{{ p.category }}</small></span></a></td>
+      <td>{{ p.seller_name }}</td>
+      <td>{{ p.price|inr }} <small class="muted">/ {{ p.unit }}</small></td>
+      <td>{{ p.quantity }} {{ p.unit }}</td>
+      <td>{{ grade(p.grade) }}</td>
+      <td>{{ pill(p.status) }}</td>
+      <td class="actions">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('product_edit', pid=p.id, next=url_for('admin_products')) }}">Edit</a>
+        {% if p.status in ('active', 'hidden') %}
+        <form method="post" action="{{ url_for('product_toggle', pid=p.id) }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ url_for('admin_products') }}"><button class="btn btn-outline btn-sm">{{ 'Hide' if p.status == 'active' else 'Show' }}</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('product_delete', pid=p.id) }}" onsubmit="return confirm('Remove {{ p.name }}?')"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ url_for('admin_products') }}"><button class="btn btn-danger-outline btn-sm">Remove</button></form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

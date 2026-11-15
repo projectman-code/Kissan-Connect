@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<section class="auth">
+  <div class="wrap auth-in">
+    <div class="auth-card">
+      <h1>{{ t('login_title') }}</h1>
+      <p class="muted">{{ t('login_sub') }}</p>
+      <form method="post" class="form" novalidate>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="username">{{ t('username') }}</label>
+          <input class="input" id="username" name="username" value="{{ username or '' }}" autocomplete="username" autofocus required>
+        </div>
+        <div class="field">
+          <label for="password">{{ t('password') }}</label>
+          <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">{{ t('login_btn') }}</button>
+      </form>
+      <p class="muted center">New here? <a class="text-link" href="{{ url_for('register') }}">{{ t('register_btn') }}</a></p>
+    </div>
+
+    <aside class="demo-box" aria-label="Demo accounts">
+      <h2>Demo accounts</h2>
+      <p class="muted">Tap one to fill the form. Remove this box and change these passwords before real use.</p>
+      <ul>
+        {% for u, p, role, note in [
+          ('admin', 'admin123', 'Admin', 'Sees everything and approves farmers'),
+          ('ramesh', 'farmer123', 'Farmer', 'Nashik, has produce and orders'),
+          ('lakshmi', 'farmer123', 'Farmer', 'Guntur, Telugu interface'),
+          ('suresh', 'farmer123', 'Farmer', 'Waiting for approval'),
+          ('priya', 'buyer123', 'Buyer', 'Has orders and a chat'),
+          ('spicehub', 'buyer123', 'Buyer', 'Restaurant, bulk orders')] %}
+        <li><button type="button" class="demo-fill" data-user="{{ u }}" data-pass="{{ p }}">
+          <span class="role-tag role-{{ role|lower }}">{{ role }}</span>
+          <strong>{{ u }}</strong><small>{{ note }}</small></button></li>
+        {% endfor %}
+      </ul>
+    </aside>
+  </div>
+</section>
+{% endblock %}

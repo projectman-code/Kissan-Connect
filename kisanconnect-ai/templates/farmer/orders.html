@@ -1,0 +1,40 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import pill, timeline with context %}
+{% set section = 'f-orders' %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<header class="dash-head"><h1>Orders to fulfil</h1></header>
+
+<div class="chips" role="group" aria-label="Filter by status">
+  <a class="chip {{ 'on' if not status }}" href="{{ url_for('farmer_orders') }}">All</a>
+  {% for s in order_flow + ['Cancelled'] %}<a class="chip {{ 'on' if status == s }}" href="{{ url_for('farmer_orders', status=s) }}">{{ s }}</a>{% endfor %}
+</div>
+
+{% for d in data %}
+{% set o = d.o %}
+<article class="order-card">
+  <header>
+    <div><a href="{{ url_for('order_detail', oid=o.id) }}"><strong>Order #{{ o.id }}</strong></a> <span class="muted">{{ o.created_at|when }} from {{ o.buyer_name }}</span></div>
+    {{ pill(o.status) }}
+  </header>
+  <ul class="mini-list">
+    {% for it in d.lines %}<li><span>{{ it.emoji }} {{ it.name }} <small class="muted">x {{ it.qty }} {{ it.unit }}</small></span><b>{{ (it.price * it.qty)|inr }}</b></li>{% endfor %}
+  </ul>
+  <p class="muted small">Deliver to: {{ o.address }}. Call {{ o.buyer_phone or o.phone }}.</p>
+  {{ timeline(o.status) }}
+  <footer>
+    <span>Collect in cash: <b>{{ o.total|inr }}</b> <span class="muted">({{ o.payment_status }})</span></span>
+    {% if o.status not in ('Delivered', 'Cancelled') %}
+    {% set nxt = order_flow[order_flow.index(o.status) + 1] %}
+    <form method="post" action="{{ url_for('order_status', oid=o.id) }}" class="inline-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ request.full_path }}">
+      <button class="btn btn-primary btn-sm" name="status" value="{{ nxt }}">Mark {{ nxt }}</button>
+      <button class="btn btn-danger-outline btn-sm" name="status" value="Cancelled" onclick="return confirm('Cancel order #{{ o.id }}?')">Cancel</button>
+    </form>
+    {% endif %}
+  </footer>
+</article>
+{% else %}
+<div class="empty-state"><h2>No orders here</h2><p>When buyers order your produce, you confirm, pack and deliver from this page.</p></div>
+{% endfor %}
+{% endblock %}

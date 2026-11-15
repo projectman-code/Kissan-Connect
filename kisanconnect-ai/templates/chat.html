@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<section class="section tight">
+  <div class="wrap chat {{ 'chat-open' if other }}">
+    <aside class="threads" aria-label="Conversations">
+      <h1>{{ t('nav_chat') }}</h1>
+      {% for th in threads %}
+      <a class="thread {{ 'on' if other and other.id == th.id }}" href="{{ url_for('chat', uid=th.id) }}">
+        <span class="avatar" aria-hidden="true">{{ th.name[0] }}</span>
+        <span class="thread-text"><strong>{{ th.name }}</strong><small>{{ th.last_body }}</small></span>
+        {% if th.unread %}<span class="dot-count">{{ th.unread }}</span>{% endif %}
+      </a>
+      {% else %}
+      <p class="muted">No conversations yet. Open a product and tap Message farmer to start one.</p>
+      {% endfor %}
+    </aside>
+
+    <div class="convo">
+      {% if other %}
+      <header class="convo-head">
+        <a class="back" href="{{ url_for('chat') }}" aria-label="Back to conversations">&larr;</a>
+        <span class="avatar" aria-hidden="true">{{ other.name[0] }}</span>
+        <div><strong>{{ other.name }}</strong><small class="muted">{{ other.role|title }}{% if other.village %}, {{ other.village }}{% endif %}</small></div>
+      </header>
+      {% if product_ctx %}
+      <p class="ctx">About: <a href="{{ url_for('product', pid=product_ctx.id) }}">{{ product_ctx.emoji }} {{ product_ctx.name }} at {{ product_ctx.price|inr }} per {{ product_ctx.unit }}</a></p>
+      {% endif %}
+      <div class="msgs" data-chat-log data-uid="{{ other.id }}" {% if product_ctx %}data-product="{{ product_ctx.id }}"{% endif %} aria-live="polite"></div>
+      <form class="msg-form" data-chat-form>
+        <input class="input" data-chat-input maxlength="500" placeholder="Type a message" aria-label="Message" autocomplete="off">
+        <button class="btn btn-primary">{{ t('send') }}</button>
+      </form>
+      {% else %}
+      <div class="empty-state"><h2>Pick a conversation</h2><p>Messages with farmers and buyers show here and update on their own.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

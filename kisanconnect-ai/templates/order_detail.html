@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_m.html" import pill, timeline with context %}
+{% block title %}Order #{{ o.id }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <h1>Order #{{ o.id }} {{ pill(o.status) }}</h1>
+    <p class="muted">Placed {{ o.created_at|when }}</p>
+  </div>
+</section>
+<section class="section tight">
+  <div class="wrap cart">
+    <div class="panel">
+      {{ timeline(o.status) }}
+      <h2>Items</h2>
+      <ul class="mini-list">
+        {% for it in items %}
+        <li><span>{{ it.emoji }} <a href="{{ url_for('product', pid=it.product_id) }}">{{ it.name }}</a> <small class="muted">{{ it.qty }} {{ it.unit }} at {{ it.price|inr }}</small></span><b>{{ (it.price * it.qty)|inr }}</b></li>
+        {% endfor %}
+      </ul>
+
+      {% if can_manage and o.status not in ('Delivered', 'Cancelled') %}
+      <h2>Update this order</h2>
+      <form method="post" action="{{ url_for('order_status', oid=o.id) }}" class="inline-form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <select class="input" name="status" aria-label="New status">
+          {% for s in order_flow %}{% if s != o.status %}<option value="{{ s }}" {{ 'selected' if loop.index0 == order_flow.index(o.status) + 1 }}>{{ s }}</option>{% endif %}{% endfor %}
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <button class="btn btn-primary">Save status</button>
+      </form>
+      <p class="muted small">Marking Delivered records the cash as collected.</p>
+      {% elif can_cancel %}
+      <form method="post" action="{{ url_for('order_status', oid=o.id) }}" onsubmit="return confirm('Cancel this order?')">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="status" value="Cancelled">
+        <button class="btn btn-danger">Cancel order</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <aside class="summary">
+      <h2>Payment</h2>
+      <dl>
+        <div><dt>Method</dt><dd>Cash on delivery</dd></div>
+        <div><dt>Status</dt><dd>{{ o.payment_status }}</dd></div>
+        <div class="grand"><dt>Amount</dt><dd>{{ o.total|inr }}</dd></div>
+      </dl>
+      <h2>Delivery</h2>
+      <p>{{ o.address }}</p>
+      <p class="muted">Phone {{ o.phone }}{% if o.note %}<br>Note: {{ o.note }}{% endif %}</p>
+      <h2>People</h2>
+      <p>Buyer: <strong>{{ o.buyer_name }}</strong><br>Farmer: <strong>{{ o.seller_name }}</strong>{% if o.seller_phone %} <span class="muted">{{ o.seller_phone }}</span>{% endif %}</p>
+      {% if me.id == o.buyer_id %}<a class="btn btn-outline btn-block" href="{{ url_for('chat', uid=o.seller_id) }}">Message farmer</a>
+      {% elif me.id == o.seller_id %}<a class="btn btn-outline btn-block" href="{{ url_for('chat', uid=o.buyer_id) }}">Message buyer</a>{% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_m.html" import media, grade with context %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+<section class="page-head"><div class="wrap"><h1>{{ t('nav_cart') }}</h1></div></section>
+<section class="section tight">
+  <div class="wrap">
+    {% if lines %}
+    <div class="cart">
+      <ul class="cart-list">
+        {% for ln in lines %}
+        <li class="cart-row">
+          <a href="{{ url_for('product', pid=ln.p.id) }}" class="cart-media">{{ media(ln.p) }}</a>
+          <div class="cart-info">
+            <a href="{{ url_for('product', pid=ln.p.id) }}"><strong>{{ ln.p.name }}</strong></a>
+            <span class="muted">From {{ ln.p.seller_name }} {{ grade(ln.p.grade) }}</span>
+            <span class="muted">{{ ln.p.price|inr }} per {{ ln.p.unit }}</span>
+          </div>
+          <form method="post" action="{{ url_for('cart_update', pid=ln.p.id) }}" class="cart-qty">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <div class="qty" data-qty data-max="{{ ln.p.quantity }}">
+              <button type="button" data-step="-1" aria-label="Less">-</button>
+              <input type="number" name="qty" value="{{ ln.qty }}" min="0" max="{{ ln.p.quantity }}" aria-label="Quantity">
+              <button type="button" data-step="1" aria-label="More">+</button>
+            </div>
+            <button class="link-btn">Update</button>
+          </form>
+          <strong class="cart-sub">{{ ln.sub|inr }}</strong>
+          <form method="post" action="{{ url_for('cart_remove', pid=ln.p.id) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <button class="icon-btn" aria-label="Remove {{ ln.p.name }}">&times;</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <aside class="summary">
+        <h2>Order summary</h2>
+        <dl>
+          <div><dt>Items</dt><dd>{{ lines|length }}</dd></div>
+          <div><dt>Delivery</dt><dd>Arranged by farmer</dd></div>
+          <div class="grand"><dt>Pay on delivery</dt><dd>{{ total|inr }}</dd></div>
+        </dl>
+        <p class="muted small">Cash on delivery only. Items from different farmers are split into separate orders.</p>
+        {% if me.cod_blocked %}
+          <p class="notice notice-error">Cash on delivery is switched off for your account. Contact the admin.</p>
+        {% else %}
+          <a class="btn btn-gold btn-block btn-lg" href="{{ url_for('checkout') }}">Continue to delivery</a>
+        {% endif %}
+      </aside>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <h2>Your cart is empty</h2>
+      <p>Pick fresh produce straight from the farm.</p>
+      <a class="btn btn-primary" href="{{ url_for('shop') }}">{{ t('cta_shop') }}</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

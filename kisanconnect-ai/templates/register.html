@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block content %}
+{% set pick = form.get('role') or request.args.get('role') or 'buyer' %}
+<section class="auth">
+  <div class="wrap auth-in auth-narrow">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p class="muted">Buyers can shop right away. Farmers are approved by an admin first, which keeps the market trusted.</p>
+      <form method="post" class="form" novalidate>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <fieldset class="role-pick">
+          <legend>I want to</legend>
+          <label class="role-opt"><input type="radio" name="role" value="buyer" {{ 'checked' if pick != 'farmer' }}><span><strong>Buy produce</strong><small>Shop from farmers directly</small></span></label>
+          <label class="role-opt"><input type="radio" name="role" value="farmer" {{ 'checked' if pick == 'farmer' }}><span><strong>Sell my produce</strong><small>List crops and get fair prices</small></span></label>
+        </fieldset>
+        <div class="row">
+          <div class="field"><label for="name">Full name</label><input class="input" id="name" name="name" value="{{ form.get('name', '') }}" required></div>
+          <div class="field"><label for="phone">Phone (10 digits)</label><input class="input" id="phone" name="phone" inputmode="numeric" maxlength="14" value="{{ form.get('phone', '') }}" required></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="username">{{ t('username') }}</label><input class="input" id="username" name="username" autocomplete="username" value="{{ form.get('username', '') }}" required></div>
+          <div class="field"><label for="password">{{ t('password') }}</label><input class="input" id="password" name="password" type="password" autocomplete="new-password" minlength="6" required></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="village">Village or city</label><input class="input" id="village" name="village" value="{{ form.get('village', '') }}"></div>
+          <div class="field"><label for="language">Preferred language</label>
+            <select class="input" id="language" name="language">
+              {% for code, label in lang_names.items() %}<option value="{{ code }}" {{ 'selected' if (form.get('language') or lang) == code }}>{{ label }}</option>{% endfor %}
+            </select></div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">{{ t('register_btn') }}</button>
+      </form>
+      <p class="muted center">Already registered? <a class="text-link" href="{{ url_for('login') }}">{{ t('login_btn') }}</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

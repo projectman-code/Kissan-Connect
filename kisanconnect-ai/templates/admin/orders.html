@@ -1,0 +1,39 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import pill with context %}
+{% set section = 'a-orders' %}
+{% block title %}All orders{% endblock %}
+{% block content %}
+<header class="dash-head"><h1>All orders</h1></header>
+<div class="chips" role="group" aria-label="Filter by status">
+  <a class="chip {{ 'on' if not status }}" href="{{ url_for('admin_orders') }}">All</a>
+  {% for s in order_flow + ['Cancelled'] %}<a class="chip {{ 'on' if status == s }}" href="{{ url_for('admin_orders', status=s) }}">{{ s }}</a>{% endfor %}
+</div>
+<div class="table-wrap"><table class="table table-rows">
+  <thead><tr><th>Order</th><th>Items</th><th>Buyer</th><th>Farmer</th><th>COD</th><th>Status</th><th><span class="sr">Update</span></th></tr></thead>
+  <tbody>
+  {% for d in data %}{% set o = d.o %}
+    <tr>
+      <td><a href="{{ url_for('order_detail', oid=o.id) }}"><strong>#{{ o.id }}</strong></a><small class="muted">{{ o.created_at|when }}</small></td>
+      <td>{% for it in d.lines %}{{ it.emoji }} {{ it.name }} x {{ it.qty }}{{ ', ' if not loop.last }}{% endfor %}</td>
+      <td>{{ o.buyer_name }}<small class="muted">{{ o.phone }}</small></td>
+      <td>{{ o.seller_name }}</td>
+      <td>{{ o.total|inr }}<small class="muted">{{ o.payment_status }}</small></td>
+      <td>{{ pill(o.status) }}</td>
+      <td class="actions">
+        {% if o.status not in ('Delivered', 'Cancelled') %}
+        <form method="post" action="{{ url_for('order_status', oid=o.id) }}" class="inline-form">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ request.full_path }}">
+          <select class="input input-sm" name="status" aria-label="New status for order {{ o.id }}">
+            {% for s in order_flow if s != o.status %}<option>{{ s }}</option>{% endfor %}<option>Cancelled</option>
+          </select>
+          <button class="btn btn-primary btn-sm">Save</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="muted">No orders in this view.</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

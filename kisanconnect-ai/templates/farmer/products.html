@@ -1,0 +1,34 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import grade, pill with context %}
+{% set section = 'f-products' %}
+{% block title %}My produce{% endblock %}
+{% block content %}
+<header class="dash-head">
+  <h1>My produce</h1>
+  <a class="btn btn-gold" href="{{ url_for('product_new') }}">Add produce</a>
+</header>
+
+{% if items %}
+<div class="table-wrap"><table class="table table-rows">
+  <thead><tr><th>Produce</th><th>Price</th><th>Stock</th><th>Grade</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+  <tbody>
+  {% for p in items %}
+    <tr>
+      <td><a href="{{ url_for('product', pid=p.id) }}" class="cell-product"><span class="mini-media cat-{{ p.category }}">{% if p.image %}<img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="">{% else %}{{ p.emoji }}{% endif %}</span><span><strong>{{ p.name }}</strong><small class="muted">{{ p.category }}{% if p.organic %}, organic{% endif %}</small></span></a></td>
+      <td>{{ p.price|inr }} <small class="muted">/ {{ p.unit }}</small></td>
+      <td>{{ p.quantity }} {{ p.unit }}</td>
+      <td>{{ grade(p.grade) }}{% if p.ai_verified %}<small class="muted"> AI {{ p.quality_score }}</small>{% endif %}</td>
+      <td>{{ pill(p.status) }}</td>
+      <td class="actions">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('product_edit', pid=p.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('product_toggle', pid=p.id) }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-outline btn-sm">{{ 'Hide' if p.status == 'active' else 'Show' }}</button></form>
+        <form method="post" action="{{ url_for('product_delete', pid=p.id) }}" onsubmit="return confirm('Remove {{ p.name }}?')"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-danger-outline btn-sm">Remove</button></form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<div class="empty-state"><h2>No produce listed yet</h2><p>Add your first crop. A clear photo gets an instant AI quality grade and a suggested price.</p><a class="btn btn-primary" href="{{ url_for('product_new') }}">Add produce</a></div>
+{% endif %}
+{% endblock %}

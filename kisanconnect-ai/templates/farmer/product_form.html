@@ -1,0 +1,94 @@
+{% extends "dash_base.html" %}
+{% set section = 'f-new' %}
+{% block title %}{{ 'Edit' if p else 'Add' }} produce{% endblock %}
+{% block content %}
+{% set curcrop = form.get('crop') or '' %}
+<header class="dash-head"><h1>{{ 'Edit ' ~ p.name if p else 'Add produce' }}</h1></header>
+
+<form method="post" enctype="multipart/form-data" class="pform" data-product-form novalidate>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  {% if request.args.get('next') %}<input type="hidden" name="next" value="{{ request.args.get('next') }}">{% endif %}
+
+  <section class="panel">
+    <h2>1. What are you selling?</h2>
+    <div class="row">
+      <div class="field">
+        <label for="crop">Crop</label>
+        <select class="input" id="crop" name="crop" data-crop required>
+          <option value="">Choose a crop</option>
+          {% for cat in categories %}
+          <optgroup label="{{ cat }}">
+            {% for name, info in crops.items() if info.cat == cat %}
+            <option value="{{ name }}" data-unit="{{ info.unit }}" {{ 'selected' if curcrop == name }}>{{ info.emoji }} {{ name }}</option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+          <option value="__other" {{ 'selected' if curcrop == '__other' }}>Something else</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="unit">Sold by</label>
+        <select class="input" id="unit" name="unit" data-unit>
+          {% for u in units %}<option {{ 'selected' if form.get('unit') == u }}>{{ u }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="row other-fields" data-other {{ 'hidden' if curcrop != '__other' }}>
+      <div class="field"><label for="custom_name">Name of the produce</label><input class="input" id="custom_name" name="custom_name" maxlength="60" value="{{ form.get('custom_name', '') }}"></div>
+      <div class="field"><label for="category">Category</label>
+        <select class="input" id="category" name="category">{% for c in categories %}<option {{ 'selected' if form.get('category') == c }}>{{ c }}</option>{% endfor %}</select></div>
+    </div>
+    <label class="check"><input type="checkbox" name="organic" value="1" data-organic {{ 'checked' if form.get('organic') }}> Grown organically</label>
+  </section>
+
+  <section class="panel">
+    <h2>2. Photo and AI quality grade</h2>
+    <div class="photo-row">
+      <label class="drop" for="image">
+        <input type="file" id="image" name="image" accept="image/*" data-preview="#prod-preview" data-grade-input>
+        <span>{{ 'Replace the photo' if p and p.image else 'Tap to add a clear daylight photo' }}</span>
+        <img id="prod-preview" alt="Photo preview" {% if p and p.image %}src="{{ url_for('static', filename='uploads/' ~ p.image) }}"{% else %}hidden{% endif %}>
+      </label>
+      <div class="ai-box" data-grade-box aria-live="polite">
+        <p class="muted">The AI grades your photo as soon as you choose it. A saved photo sets the grade automatically.</p>
+      </div>
+    </div>
+    <div class="field narrow-field">
+      <label for="grade">Quality grade</label>
+      <select class="input" id="grade" name="grade" data-grade>
+        {% for g, label in grades.items() %}<option value="{{ g }}" {{ 'selected' if (form.get('grade') or 'B') == g }}>Grade {{ g }} ({{ label }})</option>{% endfor %}
+      </select>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Price and quantity</h2>
+    <div class="row">
+      <div class="field">
+        <label for="price">Your price (INR per unit)</label>
+        <input class="input" id="price" name="price" type="number" step="0.5" min="1" value="{{ form.get('price', '') }}" required data-price>
+      </div>
+      <div class="field">
+        <label for="quantity">Quantity available</label>
+        <input class="input" id="quantity" name="quantity" type="number" min="1" value="{{ form.get('quantity', '') }}" required>
+      </div>
+    </div>
+    <button type="button" class="btn btn-outline" data-suggest>Suggest a fair price</button>
+    <div class="ai-box price-ai" data-price-box aria-live="polite" hidden></div>
+  </section>
+
+  <section class="panel">
+    <h2>4. Details</h2>
+    <div class="row">
+      <div class="field"><label for="location">Where is it from?</label><input class="input" id="location" name="location" maxlength="80" value="{{ form.get('location') or me.village or '' }}"></div>
+    </div>
+    <div class="field"><label for="description">Describe it for buyers</label>
+      <textarea class="input" id="description" name="description" rows="3" maxlength="600" placeholder="Variety, harvest date, how it is packed">{{ form.get('description', '') }}</textarea></div>
+  </section>
+
+  <div class="form-actions">
+    <button class="btn btn-gold btn-lg">{{ 'Save changes' if p else 'List on the market' }}</button>
+    <a class="btn btn-ghost btn-lg" href="{{ url_for('farmer_products') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

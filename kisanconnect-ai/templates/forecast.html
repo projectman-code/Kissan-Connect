@@ -1,0 +1,34 @@
+{% extends "dash_base.html" %}
+{% set section = 'f-forecast' %}
+{% block title %}Demand forecast{% endblock %}
+{% block content %}
+<header class="dash-head">
+  <h1>{{ t('nav_forecast') }}</h1>
+  <p class="muted">Which crops buyers will want over the next three months. {% if fc.live_orders %}Blended with your marketplace's recent orders.{% else %}Based on seasonal buying patterns until your marketplace has order history.{% endif %}</p>
+</header>
+
+<section class="panel">
+  <h2>Selling well right now</h2>
+  <ul class="chips-static">
+    {% for c in fc.now %}<li><span aria-hidden="true">{{ c.emoji }}</span> {{ c.crop }} <b>{{ c.index }}</b></li>{% endfor %}
+  </ul>
+</section>
+
+<div class="fc-grid">
+  {% for m in fc.months %}
+  <section class="panel fc-month">
+    <h2>{{ m.label }}</h2>
+    <ol class="fc-list">
+      {% for c in m.top %}
+      <li>
+        <span class="fc-name"><span aria-hidden="true">{{ c.emoji }}</span> {{ c.crop }}</span>
+        <span class="fc-bar" role="img" aria-label="Demand index {{ c.index }} out of 100"><i style="width: {{ ((c.index - 40) / 60 * 100)|round(0) if c.index > 40 else 5 }}%"></i></span>
+        <span class="fc-delta {{ 'up' if c.delta > 2 else ('down' if c.delta < -2 else '') }}">{% if c.delta > 2 %}+{{ c.delta }}{% elif c.delta < -2 %}{{ c.delta }}{% else %}steady{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endfor %}
+</div>
+<p class="muted small">The index runs from 0 to 100 against the strongest crop that month. The change compares with this month.</p>
+{% endblock %}

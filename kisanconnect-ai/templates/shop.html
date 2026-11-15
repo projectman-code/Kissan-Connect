@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_m.html" import card with context %}
+{% block title %}Market{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <h1>{{ t('nav_shop') }}</h1>
+    <form class="filters" method="get" role="search">
+      <div class="search">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search" name="q" value="{{ qs }}" placeholder="{{ t('search_ph') }}" aria-label="Search produce">
+      </div>
+      <select class="input" name="grade" aria-label="Quality grade" data-autosubmit>
+        <option value="">Any grade</option>
+        {% for g, label in grades.items() %}<option value="{{ g }}" {{ 'selected' if grade == g }}>Grade {{ g }} ({{ label }})</option>{% endfor %}
+      </select>
+      <select class="input" name="sort" aria-label="Sort" data-autosubmit>
+        <option value="">Newest</option>
+        <option value="price_asc" {{ 'selected' if sort == 'price_asc' }}>Price, low to high</option>
+        <option value="price_desc" {{ 'selected' if sort == 'price_desc' }}>Price, high to low</option>
+        <option value="rating" {{ 'selected' if sort == 'rating' }}>Best rated</option>
+      </select>
+      <label class="check"><input type="checkbox" name="organic" value="1" {{ 'checked' if organic }} data-autosubmit> Organic only</label>
+      <button class="btn btn-primary btn-sm">Search</button>
+      <div class="chips" role="group" aria-label="Category">
+        <button class="chip {{ 'on' if not cat }}" name="category" value="">All</button>
+        {% for c in categories %}<button class="chip {{ 'on' if cat == c }}" name="category" value="{{ c }}">{{ c }}</button>{% endfor %}
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    <p class="muted result-count">{{ items|length }} {{ 'listing' if items|length == 1 else 'listings' }} found{% if cat %} in {{ cat }}{% endif %}{% if qs %} for "{{ qs }}"{% endif %}</p>
+    {% if items %}
+    <div class="grid grid-4">{% for p in items %}{{ card(p) }}{% endfor %}</div>
+    {% else %}
+    <div class="empty-state">
+      <h2>Nothing matches yet</h2>
+      <p>Try a different crop name, remove a filter, or check another category.</p>
+      <a class="btn btn-primary" href="{{ url_for('shop') }}">Clear filters</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import pill, media with context %}
+{% set section = 'f-over' %}
+{% block title %}Seller overview{% endblock %}
+{% block content %}
+<header class="dash-head">
+  <div>
+    <h1>Hello, {{ me.name.split(' ')[0] }}</h1>
+    <p class="muted">{{ me.village or 'Your farm' }}</p>
+  </div>
+  <a class="btn btn-gold" href="{{ url_for('product_new') }}">Add produce</a>
+</header>
+
+{% if me.status == 'pending' %}
+<p class="notice">Your farmer account is waiting for admin approval. You can explore everything now and list produce as soon as you are approved.</p>
+{% endif %}
+
+<div class="stats">
+  <div class="stat"><strong>{{ stats.new_orders }}</strong><span>New orders to confirm</span></div>
+  <div class="stat"><strong>{{ stats.collected|inr }}</strong><span>Cash collected</span></div>
+  <div class="stat"><strong>{{ stats.pending_cod|inr }}</strong><span>To collect on delivery</span></div>
+  <div class="stat"><strong>{{ products|selectattr('status', 'equalto', 'active')|list|length }}</strong><span>Listings live</span></div>
+</div>
+
+<div class="dash-cols">
+  <section class="panel">
+    <h2>Sales in the last 7 days</h2>
+    {% set mx = days|map(attribute='value')|max %}
+    <div class="bars" role="img" aria-label="Daily sales for the last seven days">
+      {% for d in days %}<div class="bar"><i style="height: {{ ((d.value / mx * 100) if mx else 0)|round(0) }}%" title="{{ d.value|inr }}"></i><b>{{ d.value|inr if d.value else '' }}</b><span>{{ d.label }}</span></div>{% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Needs attention</h2>
+    {% if low %}
+    <ul class="mini-list">
+      {% for p in low %}<li><span>{{ p.emoji }} {{ p.name }}</span><b class="warn">{{ p.quantity }} {{ p.unit }} left</b></li>{% endfor %}
+    </ul>
+    <p class="muted small">Restock soon so buyers can keep ordering.</p>
+    {% else %}
+    <p class="muted">Stock levels look healthy.</p>
+    {% endif %}
+    <a class="text-link" href="{{ url_for('demand_forecast') }}">See what will sell next month</a>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h2>Latest orders</h2><a class="text-link" href="{{ url_for('farmer_orders') }}">All orders</a></div>
+  {% if recent %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Order</th><th>Buyer</th><th>Placed</th><th>Amount</th><th>Status</th></tr></thead>
+    <tbody>{% for o in recent %}
+      <tr><td><a href="{{ url_for('order_detail', oid=o.id) }}">#{{ o.id }}</a></td><td>{{ o.buyer_name }}</td><td>{{ o.created_at|when }}</td><td>{{ o.total|inr }}</td><td>{{ pill(o.status) }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">Orders from buyers show here.</p>{% endif %}
+</section>
+{% endblock %}

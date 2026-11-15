@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_m.html" import card, grade, stars, media, pill with context %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block content %}
+<section class="section tight">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ url_for('shop') }}">Market</a> <span>/</span> <a href="{{ url_for('shop', category=p.category) }}">{{ p.category }}</a> <span>/</span> {{ p.name }}</nav>
+
+    {% if p.status != 'active' %}<p class="notice">This listing is {{ p.status }} and hidden from buyers.</p>{% endif %}
+
+    <div class="pd">
+      <div class="pd-media">{{ media(p, true) }}</div>
+
+      <div class="pd-info">
+        <div class="pd-title">
+          <h1>{{ p.name }}</h1>
+          {{ grade(p.grade) }}
+          {% if p.organic %}<span class="badge badge-leaf">Organic</span>{% endif %}
+        </div>
+        <p class="pd-rating">
+          {% if p.review_count %}{{ stars(p.rating) }} <span class="muted">{{ '%.1f'|format(p.rating) }} from {{ p.review_count }} {{ 'review' if p.review_count == 1 else 'reviews' }}</span>{% else %}<span class="muted">No reviews yet</span>{% endif %}
+        </p>
+
+        <div class="pd-price">
+          <span class="tag tag-lg"><b>{{ p.price|inr }}</b><small>/ {{ p.unit }}</small></span>
+          <span class="muted">{{ p.quantity }} {{ p.unit }} in stock</span>
+        </div>
+
+        {% if insight %}
+        <div class="insight insight-{{ insight.tag }}">
+          <strong>
+            {% if insight.tag == 'fair' %}Fair price{% elif insight.tag == 'below' %}{{ insight.diff|abs }}% below the AI fair price{% else %}{{ insight.diff }}% above the AI fair price{% endif %}
+          </strong>
+          <span>For this grade and month, the model expects {{ insight.low|inr }} to {{ insight.high|inr }} per {{ p.unit }}.</span>
+        </div>
+        {% endif %}
+
+        {% if p.ai_verified %}
+        <div class="meter" role="img" aria-label="AI quality score {{ p.quality_score }} out of 100">
+          <div class="meter-top"><span>AI quality score</span><strong>{{ p.quality_score }}/100</strong></div>
+          <div class="meter-bar"><i style="width: {{ p.quality_score }}%"></i></div>
+        </div>
+        {% endif %}
+
+        {% if me and me.id != p.seller_id and p.status == 'active' and p.quantity > 0 %}
+        <form method="post" action="{{ url_for('cart_add', pid=p.id) }}" class="buy">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <div class="qty" data-qty data-max="{{ p.quantity }}">
+            <button type="button" data-step="-1" aria-label="Less">-</button>
+            <input type="number" name="qty" value="1" min="1" max="{{ p.quantity }}" aria-label="Quantity in {{ p.unit }}">
+            <button type="button" data-step="1" aria-label="More">+</button>
+          </div>
+          <button class="btn btn-primary btn-lg">{{ t('add_to_cart') }}</button>
+          <button class="btn btn-gold btn-lg" name="buy_now" value="1">Buy now</button>
+        </form>
+        <p class="cod-line"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg> {{ t('cod_note') }}. Pay the farmer when the order arrives.</p>
+        {% elif not me %}
+        <p><a class="btn btn-primary btn-lg" href="{{ url_for('login', next=request.path) }}">Log in to buy</a></p>
+        {% elif me.id == p.seller_id %}
+        <p><a class="btn btn-outline" href="{{ url_for('product_edit', pid=p.id) }}">Edit this listing</a></p>
+        {% endif %}
+
+        <div class="seller">
+          <div class="avatar" aria-hidden="true">{{ p.seller_name[0] }}</div>
+          <div>
+            <strong>{{ p.seller_name }}</strong>
+            <span class="muted">{{ p.location or p.seller_village }}</span>
+          </div>
+          {% if me and me.id != p.seller_id %}
+          <a class="btn btn-outline btn-sm" href="{{ url_for('chat', uid=p.seller_id, product=p.id) }}">Message farmer</a>
+          {% endif %}
+        </div>
+
+        {% if p.description %}<p class="desc">{{ p.description }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint tight">
+  <div class="wrap reviews">
+    <h2>Reviews</h2>
+    {% if can_review %}
+    <form method="post" action="{{ url_for('review', pid=p.id) }}" class="review-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label for="rating">Your rating</label>
+      <select class="input" id="rating" name="rating">{% for i in [5,4,3,2,1] %}<option value="{{ i }}">{{ i }} out of 5</option>{% endfor %}</select>
+      <input class="input" name="comment" maxlength="400" placeholder="Tell other buyers about the quality" aria-label="Review comment">
+      <button class="btn btn-primary btn-sm">Post review</button>
+    </form>
+    {% endif %}
+    {% for r in reviews %}
+    <article class="review">
+      {{ stars(r.rating) }} <strong>{{ r.name }}</strong> <span class="muted">{{ r.created_at|day }}</span>
+      {% if r.comment %}<p>{{ r.comment }}</p>{% endif %}
+    </article>
+    {% else %}
+    <p class="muted">Reviews appear here after buyers receive their orders.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% if related %}
+<section class="section tight">
+  <div class="wrap">
+    <h2>More in {{ p.category }}</h2>
+    <div class="grid grid-4">{% for r in related %}{{ card(r) }}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

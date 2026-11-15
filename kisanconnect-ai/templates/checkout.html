@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Delivery{% endblock %}
+{% block content %}
+<section class="page-head"><div class="wrap"><h1>Delivery details</h1></div></section>
+<section class="section tight">
+  <div class="wrap cart">
+    <form method="post" class="form panel" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="address">Full delivery address</label>
+        <textarea class="input" id="address" name="address" rows="3" required placeholder="House or flat, street, area, city and pincode">{{ form.get('address', '') }}</textarea>
+      </div>
+      <div class="field">
+        <label for="phone">Phone number the farmer can call</label>
+        <input class="input" id="phone" name="phone" inputmode="numeric" maxlength="14" value="{{ form.get('phone', '') }}" required>
+      </div>
+      <div class="field">
+        <label for="note">Note for the farmer (optional)</label>
+        <input class="input" id="note" name="note" maxlength="300" value="{{ form.get('note', '') }}" placeholder="Best time to deliver, landmark, packing request">
+      </div>
+      <div class="pay-box">
+        <span class="pay-dot" aria-hidden="true"></span>
+        <div><strong>Cash on delivery</strong><span class="muted">You pay {{ total|inr }} in cash to the farmer when the order arrives.</span></div>
+      </div>
+      <button class="btn btn-gold btn-lg">Place order and pay on delivery</button>
+    </form>
+
+    <aside class="summary">
+      <h2>Your items</h2>
+      <ul class="mini-list">
+        {% for ln in lines %}
+        <li><span>{{ ln.p.emoji }} {{ ln.p.name }} <small class="muted">x {{ ln.qty }} {{ ln.p.unit }}</small></span><b>{{ ln.sub|inr }}</b></li>
+        {% endfor %}
+      </ul>
+      <dl><div class="grand"><dt>Pay on delivery</dt><dd>{{ total|inr }}</dd></div></dl>
+    </aside>
+  </div>
+</section>
+{% endblock %}

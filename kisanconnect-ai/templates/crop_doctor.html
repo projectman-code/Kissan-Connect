@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Crop doctor{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <h1>{{ t('nav_doctor') }}</h1>
+    <p class="muted lead-dark">Upload one leaf on a plain background in daylight. The AI checks its colour pattern and suggests what to do. Results appear in {{ lang_names[lang] }}.</p>
+  </div>
+</section>
+<section class="section tight">
+  <div class="wrap doctor">
+    <form method="post" enctype="multipart/form-data" class="form panel">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="crop">Which crop is it? (optional)</label>
+        <select class="input" id="crop" name="crop">
+          <option value="">Not sure</option>
+          {% for c in crops %}<option>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="image">Leaf photo</label>
+        <label class="drop" for="image">
+          <input type="file" id="image" name="image" accept="image/*" capture="environment" required data-preview="#leaf-preview">
+          <span>Tap to take or choose a photo</span>
+          <img id="leaf-preview" alt="Selected leaf preview" hidden>
+        </label>
+      </div>
+      <button class="btn btn-primary btn-lg">Check my leaf</button>
+    </form>
+
+    <div class="result" aria-live="polite">
+      {% if result %}
+        {% if result.ok %}
+        <article class="diag diag-{{ result.key }}">
+          {% if preview %}<img class="diag-img" src="{{ preview }}" alt="Your leaf photo">{% endif %}
+          <h2>{{ result.name }}</h2>
+          <p class="diag-meta">
+            {% if result.severity %}<span class="pill pill-{{ result.severity_key }}">{{ result.severity }}</span>{% endif %}
+            <span class="muted">Match strength {{ result.confidence }}%</span>
+            {% if result.crop %}<span class="muted">Crop: {{ result.crop }}</span>{% endif %}
+          </p>
+          <h3>Likely cause</h3><p>{{ result.cause }}</p>
+          <h3>What to do</h3><p>{{ result.treatment }}</p>
+          <details>
+            <summary>How the AI read the leaf</summary>
+            <ul class="bars-h">
+              {% for k, v in result.breakdown.items() %}<li><span>{{ k }}</span><i style="--w: {{ v }}%"></i><b>{{ v }}%</b></li>{% endfor %}
+            </ul>
+          </details>
+          <p class="muted small">This is a quick screening from the leaf's colours, not a lab test. For heavy damage, show the plant to your local agriculture officer.</p>
+        </article>
+        {% else %}
+        <div class="empty-state"><h2>No leaf found</h2><p>{{ result.message }}</p></div>
+        {% endif %}
+      {% else %}
+        <div class="empty-state"><h2>Your result appears here</h2><p>You get the likely problem, how serious it looks and the steps to take.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_m.html" import pill, timeline with context %}
+{% block title %}My orders{% endblock %}
+{% block content %}
+<section class="page-head"><div class="wrap"><h1>{{ t('nav_orders') }}</h1></div></section>
+<section class="section tight">
+  <div class="wrap narrow">
+    {% for d in data %}
+    <article class="order-card">
+      <header>
+        <div><a href="{{ url_for('order_detail', oid=d.o.id) }}"><strong>Order #{{ d.o.id }}</strong></a>
+          <span class="muted">{{ d.o.created_at|when }} from {{ d.o.seller_name }}</span></div>
+        {{ pill(d.o.status) }}
+      </header>
+      <ul class="mini-list">
+        {% for it in d.lines %}<li><span>{{ it.emoji }} {{ it.name }} <small class="muted">x {{ it.qty }} {{ it.unit }}</small></span><b>{{ (it.price * it.qty)|inr }}</b></li>{% endfor %}
+      </ul>
+      {{ timeline(d.o.status) }}
+      <footer>
+        <span>{{ 'Paid in cash' if d.o.payment_status == 'Collected' else 'Pay on delivery' }}: <b>{{ d.o.total|inr }}</b></span>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('order_detail', oid=d.o.id) }}">View details</a>
+      </footer>
+    </article>
+    {% else %}
+    <div class="empty-state"><h2>No orders yet</h2><p>Your orders and their delivery progress will show here.</p><a class="btn btn-primary" href="{{ url_for('shop') }}">{{ t('cta_shop') }}</a></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="wrap dash">
+  <aside class="side" aria-label="Section menu">
+    {% if me.role == 'admin' %}
+      <p class="side-h">Administration</p>
+      {% for href, key, label in [
+        (url_for('admin_dashboard'), 'a-over', 'Overview'),
+        (url_for('admin_users'), 'a-users', 'Users'),
+        (url_for('admin_products'), 'a-products', 'All produce'),
+        (url_for('admin_orders'), 'a-orders', 'All orders')] %}
+        <a class="side-link{{ ' on' if key == section }}" href="{{ href }}">{{ label }}</a>
+      {% endfor %}
+      <p class="side-h">Selling tools</p>
+      {% for href, key, label in [
+        (url_for('farmer_dashboard'), 'f-over', 'Seller overview'),
+        (url_for('farmer_products'), 'f-products', 'My produce'),
+        (url_for('product_new'), 'f-new', 'Add produce'),
+        (url_for('farmer_orders'), 'f-orders', 'Orders to fulfil'),
+        (url_for('demand_forecast'), 'f-forecast', 'Demand forecast')] %}
+        <a class="side-link{{ ' on' if key == section }}" href="{{ href }}">{{ label }}</a>
+      {% endfor %}
+      <p class="side-h">Buying tools</p>
+      {% for href, key, label in [
+        (url_for('shop'), 'b-shop', 'Market'),
+        (url_for('orders'), 'b-orders', 'My orders'),
+        (url_for('cart'), 'b-cart', 'Cart')] %}
+        <a class="side-link{{ ' on' if key == section }}" href="{{ href }}">{{ label }}</a>
+      {% endfor %}
+      <p class="side-h">Tools</p>
+      <a class="side-link" href="{{ url_for('crop_doctor') }}">Crop doctor</a>
+      <a class="side-link" href="{{ url_for('chat') }}">Messages</a>
+    {% else %}
+      <p class="side-h">Your farm</p>
+      {% for href, key, label in [
+        (url_for('farmer_dashboard'), 'f-over', 'Overview'),
+        (url_for('farmer_products'), 'f-products', 'My produce'),
+        (url_for('product_new'), 'f-new', 'Add produce'),
+        (url_for('farmer_orders'), 'f-orders', 'Orders'),
+        (url_for('demand_forecast'), 'f-forecast', 'Demand forecast')] %}
+        <a class="side-link{{ ' on' if key == section }}" href="{{ href }}">{{ label }}</a>
+      {% endfor %}
+      <p class="side-h">Tools</p>
+      <a class="side-link" href="{{ url_for('crop_doctor') }}">Crop doctor</a>
+      <a class="side-link" href="{{ url_for('chat') }}">Messages</a>
+      <a class="side-link" href="{{ url_for('shop') }}">Browse the market</a>
+    {% endif %}
+  </aside>
+  <main class="dash-main" id="main">{% block content %}{% endblock %}</main>
+</div>
+{% endblock %}

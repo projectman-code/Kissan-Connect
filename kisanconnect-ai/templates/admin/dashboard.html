@@ -1,0 +1,76 @@
+{% extends "dash_base.html" %}
+{% from "_m.html" import pill with context %}
+{% set section = 'a-over' %}
+{% block title %}Admin overview{% endblock %}
+{% block content %}
+<header class="dash-head">
+  <div><h1>Platform overview</h1><p class="muted">Everything on KisanConnect in one place.</p></div>
+  <a class="btn btn-outline" href="{{ url_for('admin_user_new') }}">Create account</a>
+</header>
+
+{% if pending_farmers %}
+<section class="panel panel-alert">
+  <h2>{{ pending_farmers|length }} {{ 'farmer is' if pending_farmers|length == 1 else 'farmers are' }} waiting for approval</h2>
+  <ul class="mini-list">
+    {% for u in pending_farmers %}
+    <li>
+      <span><strong>{{ u.name }}</strong> <small class="muted">{{ u.village or 'No location' }}, phone {{ u.phone }}</small></span>
+      <form method="post" action="{{ url_for('admin_user_action', uid=u.id, action='approve') }}" class="inline-form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-primary btn-sm">Approve</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="stats">
+  <div class="stat"><strong>{{ stats.gmv|inr }}</strong><span>Total order value</span></div>
+  <div class="stat"><strong>{{ stats.collected|inr }}</strong><span>COD collected</span></div>
+  <div class="stat"><strong>{{ stats.pending|inr }}</strong><span>COD still to collect</span></div>
+  <div class="stat"><strong>{{ stats.orders }}</strong><span>Orders placed</span></div>
+  <div class="stat"><strong>{{ users.get('farmer', 0) }}</strong><span>Farmers</span></div>
+  <div class="stat"><strong>{{ users.get('buyer', 0) }}</strong><span>Buyers</span></div>
+  <div class="stat"><strong>{{ products }}</strong><span>Live listings</span></div>
+  <div class="stat"><strong>{{ users.get('admin', 0) }}</strong><span>Admins</span></div>
+</div>
+
+<div class="dash-cols">
+  <section class="panel">
+    <h2>Orders in the last 14 days</h2>
+    {% set mx = days|map(attribute='value')|max %}
+    <div class="bars bars-14" role="img" aria-label="Orders per day for the last fourteen days">
+      {% for d in days %}<div class="bar"><i style="height: {{ ((d.value / mx * 100) if mx else 0)|round(0) }}%" title="{{ d.value }} orders"></i><span>{{ d.label }}</span></div>{% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Orders by status</h2>
+    <ul class="mini-list">
+      {% for s in order_flow + ['Cancelled'] %}<li><span>{{ pill(s) }}</span><b>{{ by_status.get(s, 0) }}</b></li>{% endfor %}
+    </ul>
+  </section>
+</div>
+
+<div class="dash-cols">
+  <section class="panel">
+    <h2>Top selling produce</h2>
+    <ul class="mini-list">
+      {% for t in top %}<li><span>{{ t.emoji }} {{ t.name }} <small class="muted">{{ t.qty }} sold</small></span><b>{{ t.revenue|inr }}</b></li>{% else %}<li class="muted">No sales yet.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="panel">
+    <h2>Listings by category</h2>
+    <ul class="mini-list">
+      {% for c in cats %}<li><span>{{ c.category }}</span><b>{{ c.c }}</b></li>{% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h2>Latest orders</h2><a class="text-link" href="{{ url_for('admin_orders') }}">All orders</a></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Order</th><th>Buyer</th><th>Farmer</th><th>Amount</th><th>Status</th></tr></thead>
+    <tbody>{% for o in recent %}<tr><td><a href="{{ url_for('order_detail', oid=o.id) }}">#{{ o.id }}</a></td><td>{{ o.buyer_name }}</td><td>{{ o.seller_name }}</td><td>{{ o.total|inr }}</td><td>{{ pill(o.status) }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}
